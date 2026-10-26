@@ -1,0 +1,43 @@
+name: synthesize
+
+on:
+  # 予備の定時起動：毎朝 5:32 JST（UTC 20:32）。GitHub の cron は数分〜十数分遅れることがある
+  schedule:
+    - cron: "32 20 * * *"
+  # 手動実行
+  workflow_dispatch:
+  # Supabase の Webhook からの即時起動（フェーズ4）
+  repository_dispatch:
+    types: [synthesize]
+
+concurrency:
+  group: synthesize
+  cancel-in-progress: false
+
+jobs:
+  synthesize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      voicevox:
+        image: voicevox/voicevox_engine:cpu-latest
+        ports:
+          - 50021:50021
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          pip install -q requests
+
+      - name: Synthesize pending episodes
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VOICEVOX_URL: http://localhost:50021
+        run: python scripts/synthesize.py

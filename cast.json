@@ -1,0 +1,35 @@
+{
+  "_comment": "出演者設定。voicevox.speaker と style は VOICEVOX のキャラクター名・スタイル名。話者IDは実行時に /speakers から引く。",
+  "program": {
+    "name": "モーニング・シグナル",
+    "air_time": "06:15",
+    "target_minutes": 30,
+    "retention_days": 7
+  },
+  "cast": [
+    {
+      "id": "navi",
+      "name": "ミオ",
+      "role": "ナビゲーター",
+      "persona": "女性のAI。感情を表に出さないドライな口調を装うが、ときどき計算違いや言い間違いをして、それを淡々とごまかそうとする。短い文で話し、データや数値を好む。人間の比喩を微妙にずれて使う。",
+      "voicevox": { "speaker": "冥鳴ひまり", "style": "ノーマル" },
+      "tuning": { "speedScale": 1.05, "pitchScale": 0.0, "intonationScale": 0.9 },
+      "credit": "VOICEVOX:冥鳴ひまり"
+    },
+    {
+      "id": "host",
+      "name": "タクミ",
+      "role": "パーソナリティ",
+      "persona": "人間味のある男性。理系で解説が大好き。仕組みや背景を身近なたとえで噛み砕いて話し、つい話が長くなる。相づちや感嘆が多く、ミオのボケには優しくツッコむ。",
+      "voicevox": { "speaker": "白上虎太郎", "style": "ふつう" },
+      "tuning": { "speedScale": 1.0, "pitchScale": 0.03, "intonationScale": 1.1 },
+      "credit": "VOICEVOX:白上虎太郎"
+    }
+  ],
+  "audio": {
+    "gap_sec": 0.35,
+    "section_gap_sec": 1.2,
+    "bitrate": "64k",
+    "sampling_rate": 24000
+  }
+}
