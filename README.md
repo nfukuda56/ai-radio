@@ -15,6 +15,24 @@
 - `SUPABASE_URL`：`https://lvmgfolwipwgyhhzskvj.supabase.co`
 - `SUPABASE_SERVICE_ROLE_KEY`：Supabase の service_role キー（絶対にコードに書かない）
 
+## 工程の連結
+
+- 台本タスクが `radio_episodes` に `pending` で登録すると、DBトリガー `radio_episodes_dispatch` が pg_net で GitHub の `repository_dispatch`（`synthesize`）を送り、合成ジョブが即時に起動する（`supabase/migrations/`）
+- 予備として 5:32 / 5:52 JST の定時起動もある。GitHub の定時起動は遅れたり飛ばされたりするので、即時起動が本線
+- 台本タスクの日付は必ず SQL の `(now() at time zone 'Asia/Tokyo')::date` で決める。クラウド環境の時計は UTC で、日本時間の早朝は前日になるため（2026-10-27 の取りこぼしの原因）
+
+### 即時起動のトークン（初回だけ）
+
+1. GitHub → Settings → Developer settings → Fine-grained tokens で新規作成。Repository access は `nfukuda56/ai-radio` のみ、Permissions は **Contents: Read and write** だけ（`repository_dispatch` に必要）。有効期限は任意
+2. Supabase の SQL Editor で次を実行（トークンはここにだけ貼る。コードやチャットには書かない）
+
+```sql
+select vault.create_secret('<トークン>', 'radio_github_token', 'ai-radio repository_dispatch');
+-- 更新するとき：select vault.update_secret((select id from vault.secrets where name='radio_github_token'), '<新しいトークン>');
+```
+
+未設定でも台本の登録は失敗せず、定時起動で処理される。
+
 ## 再生ページ（web/）
 
 最新の `status=ready` の回（【テスト】を除く）を再生する PWA。`?date=YYYY-MM-DD` で日付を指定できる。

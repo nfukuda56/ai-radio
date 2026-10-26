@@ -1,12 +1,14 @@
 name: synthesize
 
 on:
-  # 予備の定時起動：毎朝 5:32 JST（UTC 20:32）。GitHub の cron は数分〜十数分遅れることがある
+  # 予備の定時起動：毎朝 5:32 / 5:52 JST（UTC 20:32 / 20:52）。
+  # GitHub の cron は遅れたり飛ばされたりすることがあるため2回置く（pending がなければ何もせず終わる）
   schedule:
     - cron: "32 20 * * *"
+    - cron: "52 20 * * *"
   # 手動実行
   workflow_dispatch:
-  # Supabase の Webhook からの即時起動（フェーズ4）
+  # 台本登録時の即時起動（Supabase のトリガー radio_episodes_dispatch から repository_dispatch）
   repository_dispatch:
     types: [synthesize]
 
