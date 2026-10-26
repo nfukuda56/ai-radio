@@ -179,6 +179,7 @@ def process(ep, speakers):
         subprocess.run(
             ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
              "-f", "concat", "-safe", "0", "-i", str(listing),
+             "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", str(sr),
              "-ac", "1", "-c:a", "libmp3lame", "-b:a", audio["bitrate"], str(mp3)],
             check=True,
         )
