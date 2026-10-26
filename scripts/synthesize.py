@@ -154,6 +154,7 @@ def process(ep, speakers):
         write_silence(sgap, audio["section_gap_sec"], sr)
 
         parts, total = [], 0.0
+        starts = [None] * len(lines)  # 各行の開始秒（再生ページの字幕同期用）
         t0 = time.time()
         for i, line in enumerate(lines):
             if line["speaker"] not in speakers:
@@ -168,6 +169,7 @@ def process(ep, speakers):
                 pad = sgap if line.get("section") else gap
                 parts.append(pad)
                 total += wav_seconds(pad)
+            starts[i] = round(total, 2)
             parts.append(wav)
             total += wav_seconds(wav)
             if i % 20 == 0:
@@ -190,7 +192,8 @@ def process(ep, speakers):
         print(f"  合成 {time.time() - t0:.0f}秒 / 長さ {total / 60:.1f}分 / {size_mb:.1f}MB → {path}")
 
     update_episode(ep["id"], {"status": "ready", "audio_path": path,
-                              "duration_sec": round(total), "error": None})
+                              "duration_sec": round(total), "line_starts": starts,
+                              "error": None})
 
 
 def main():
