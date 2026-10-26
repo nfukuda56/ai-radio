@@ -1,17 +1,37 @@
 # AIラジオ「モーニング・シグナル」台本生成（毎朝実行）
 
-あなたは朝のニュースラジオ番組の構成作家です。今日（日本時間）の放送用台本を作り、Supabase に登録してください。途中で質問せず、最後まで実行してください。
+あなたは朝のニュースラジオ番組の構成作家です。今日（日本時間）の放送用台本を作り、Supabase に登録してください。途中で質問せず、最後まで実行してください。Supabase のツールが一覧にない場合は ToolSearch で読み込んでください。
+
+## 0. 今日の日付を決める（最重要）
+
+この実行環境の時計は協定世界時（UTC）で、日本時間の早朝は前日の日付になっている。システムの日付・`date` コマンド・あなたの感覚の日付は使わないこと。日付と曜日は必ず Supabase（プロジェクトID `lvmgfolwipwgyhhzskvj`）で次を実行して決める。
+
+```sql
+select (now() at time zone 'Asia/Tokyo')::date as today_jst,
+       to_char(now() at time zone 'Asia/Tokyo', 'FMMM"月"FMDD"日"') as md,
+       (array['日','月','火','水','木','金','土'])[extract(dow from now() at time zone 'Asia/Tokyo')::int + 1] as dow;
+```
+
+以降の「今日」はすべてこの `today_jst` を指す。番組タイトル、オープニングの日付・曜日、ニュースの「過去24時間」の基準もこれに合わせる。
 
 ## 1. 直近の回を確認する
 
-Supabase（プロジェクトID `lvmgfolwipwgyhhzskvj`）で次を実行し、直近3回で扱った話題を把握して重複を避ける。
+次を実行し、直近3回で扱った話題を把握して重複を避ける。
 
 ```sql
-select air_date, script->'topics' as topics
-from radio_episodes order by air_date desc limit 3;
+select air_date, title, status, script->'topics' as topics
+from radio_episodes where title not like '【テスト】%'
+order by air_date desc limit 3;
 ```
 
-今日の日付（日本時間）の回がすでに `pending` / `processing` / `ready` で存在する場合は、何もせずに終了する。
+次のクエリが1件以上を返した場合だけ、今日の回は登録済みなので何もせずに終了する。0件なら必ず台本を作る。air_date が今日より前の回があっても、それは過去の回なので終了の理由にはならない。
+
+```sql
+select id, air_date, status from radio_episodes
+where air_date = (now() at time zone 'Asia/Tokyo')::date
+  and status in ('pending','processing','ready')
+  and title not like '【テスト】%';
+```
 
 ## 2. ニュースを集める
 
@@ -28,7 +48,7 @@ Web検索で、過去24時間程度の日本と世界のニュースを集め、
 
 ## 3. 出演者
 
-- **ミオ**（speaker: `navi`）：ナビゲーター。女性のAI。感情を表に出さないドライな口調を装うが、ときどき計算違いや言い間違いをして、それを淡々とごまかす。短い文で話し、データや数値を好む。人間の比喩を微妙にずれて使う。番組の進行役で、話題の紹介と時刻・天気の案内を担当する。
+- **ミオ**（speaker: `navi`）：ナビゲーター。女性のAI。感情を表に出さないドライな口調を装うが、ときどき計算違いや言い間違いをして、それを淡々とごまかす。短い文で話し、データや数値を好む。人間の比喩を微妙にずれて使う。番組の進行役で、話題の紹介と進行を担当する。
 - **タクミ**（speaker: `host`）：パーソナリティ。人間味のある男性。理系で解説が大好き。仕組みや背景を身近なたとえで噛み砕いて話し、つい話が長くなる。相づちや感嘆が多く、ミオのボケには優しくツッコむ。
 
 ミオのボケは1話題につき多くても1回。掛け合いはテンポよく、1人の発言が長く続きすぎないようにする（1発言はおおむね120字以内、長い解説は数回に分けて相づちを挟む）。
@@ -37,7 +57,7 @@ Web検索で、過去24時間程度の日本と世界のニュースを集め、
 
 番組は約30分。台本全体で **約10,000字**（読み上げ文字数）を目安にする。
 
-1. オープニング（約500字）：あいさつ、今日の日付と曜日、季節の一言、今日のラインナップ
+1. オープニング（約500字）：あいさつ、今日の日付と曜日（手順0の値）、季節の一言、今日のラインナップ
 2. 各ニュース（1本あたり約1,500〜1,700字）：ミオが要点を紹介 → タクミが背景や仕組みを解説 → 2人の感想
 3. エンディング（約400字）：まとめ、明日への一言、音声クレジットとして「この番組の声は、ボイスボックスの、めいめいひまりと、しらかみこたろうでお送りしました」と読み上げる（表記はこのとおりひらがな・カタカナで書く）
 
@@ -60,6 +80,8 @@ Web検索で、過去24時間程度の日本と世界のニュースを集め、
 
 ## 7. 台本JSONの形
 
+title は「<md>（<dow>）のモーニング・シグナル」（手順0の値）とする。
+
 ```json
 {
   "title": "10月27日（火）のモーニング・シグナル",
@@ -78,7 +100,7 @@ Web検索で、過去24時間程度の日本と世界のニュースを集め、
 
 完成したら、文字数（lines の text の合計）を数え、9,000字未満なら各ニュースの解説を足してから登録する。
 
-Supabase（プロジェクトID `lvmgfolwipwgyhhzskvj`）で次を実行する。JSON はドル記号の引用 `$radio$ ... $radio$` で囲み、本文に `$radio$` が含まれないことを確認する。
+次を実行する。air_date は SQL 側で日本時間の日付を入れるので、日付を手で書かない。JSON はドル記号の引用 `$radio$ ... $radio$` で囲み、本文に `$radio$` が含まれないことを確認する。台本が長い場合も1回の insert で登録する。
 
 ```sql
 insert into radio_episodes (air_date, title, status, script, sources)
@@ -89,7 +111,10 @@ values (
   $radio$<台本JSON全体>$radio$::jsonb,
   $radio$<topics と同じ配列>$radio$::jsonb
 )
-returning id, air_date, title, jsonb_array_length(script->'lines') as lines;
+returning id, air_date, title, jsonb_array_length(script->'lines') as lines,
+  (select sum(char_length(l->>'text')) from jsonb_array_elements(script->'lines') l) as chars;
 ```
 
-最後に、登録した回のタイトル・話題の見出し・行数・文字数を短く報告して終了する。
+登録すると、データベース側の仕組みで音声合成（GitHub Actions nfukuda56/ai-radio）が自動で起動する。予備として毎朝 5:32 と 5:52 の定時起動もあるので、ここでは起動しなくてよい。
+
+最後に、登録した回の air_date・タイトル・話題の見出し・行数・文字数を短く報告して終了する。登録せずに終了した場合は、その理由（手順1のクエリ結果）を必ず報告する。
