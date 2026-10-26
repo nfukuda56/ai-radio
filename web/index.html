@@ -1,0 +1,110 @@
+<!doctype html>
+<!-- 本ページのデザインはデジタル庁デザインシステムウェブサイト
+     https://design.digital.go.jp/dads/ のコンテンツを加工して作成しています。
+     デザイントークン/実装例: MIT License (c) 2023 デジタル庁 -->
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>モーニング・シグナル</title>
+  <meta name="description" content="毎朝のニュースを、ミオとタクミが約30分でお届けするAIラジオ番組の再生ページ">
+  <meta name="theme-color" content="#0017c1">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="シグナル">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#transcript">字幕へ移動</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <p class="program">モーニング・シグナル</p>
+      <h1 id="ep-title" class="ep-title">読み込み中…</h1>
+      <p id="ep-meta" class="ep-meta"></p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="notice" class="notice" role="status" hidden></div>
+
+    <section id="player" class="player card" aria-label="プレーヤー" hidden>
+      <div id="resume" class="resume" hidden>
+        <p id="resume-text" class="resume__text"></p>
+        <div class="resume__actions">
+          <button type="button" class="dads-button" data-type="solid-fill" data-size="md" id="resume-yes">続きから再生</button>
+          <button type="button" class="dads-button" data-type="outline" data-size="md" id="resume-no">最初から</button>
+        </div>
+      </div>
+
+      <div class="now">
+        <p class="now__label">いま話しているのは</p>
+        <p id="now-speaker" class="now__speaker">—</p>
+        <p id="now-text" class="now__text" aria-live="off">再生ボタンを押すと始まります。</p>
+      </div>
+
+      <div class="seek">
+        <label for="seek" class="visually-hidden">再生位置</label>
+        <input id="seek" type="range" min="0" max="0" step="1" value="0">
+        <div class="seek__time">
+          <span id="t-cur">0:00</span>
+          <span id="t-dur">0:00</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button type="button" class="icon-btn" id="back" aria-label="15秒戻る">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/><text x="12" y="16.5" text-anchor="middle" font-size="7" font-weight="700">15</text></svg>
+        </button>
+        <button type="button" class="play-btn" id="play" aria-label="再生">
+          <svg id="ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="ic-pause" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+        </button>
+        <button type="button" class="icon-btn" id="fwd" aria-label="30秒進む">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1l5 5-5 5V7a6 6 0 1 0 6 6h2a8 8 0 1 1-8-8z"/><text x="12" y="16.5" text-anchor="middle" font-size="7" font-weight="700">30</text></svg>
+        </button>
+      </div>
+
+      <fieldset class="speed">
+        <legend>再生速度</legend>
+        <div class="speed__options" id="speed"></div>
+      </fieldset>
+
+      <audio id="audio" preload="metadata"></audio>
+    </section>
+
+    <section id="topics-sec" class="block" aria-labelledby="topics-h" hidden>
+      <h2 id="topics-h">今日の話題と出典</h2>
+      <ol id="topics" class="topics"></ol>
+    </section>
+
+    <section id="transcript-sec" class="block" aria-labelledby="transcript-h" hidden>
+      <div class="block__head">
+        <h2 id="transcript-h">字幕</h2>
+        <label class="check">
+          <input type="checkbox" id="autoscroll" checked>
+          <span>自動でスクロール</span>
+        </label>
+      </div>
+      <p id="sync-note" class="note"></p>
+      <ol id="transcript" class="transcript" tabindex="-1"></ol>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>音声：VOICEVOX:冥鳴ひまり、VOICEVOX:白上虎太郎</p>
+      <p>台本はAIが作成しています。内容の正確さは各出典でご確認ください。</p>
+      <p class="note">デザインは、デジタル庁デザインシステムウェブサイト（<a href="https://design.digital.go.jp/dads/">https://design.digital.go.jp/dads/</a>）のコンテンツを加工して作成しています。</p>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
