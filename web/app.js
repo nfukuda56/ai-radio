@@ -94,6 +94,9 @@
       const mid = (lo + hi) >> 1;
       if (starts[mid] <= time + 0.05) { ans = mid; lo = mid + 1; } else hi = mid - 1;
     }
+    // 空行は直前の行と同じ開始秒を持つので、直前の空でない行を返す
+    const lines = ep.script.lines;
+    while (ans > 0 && !(lines[ans].text || "").trim()) ans--;
     return ans;
   }
 
